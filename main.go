@@ -3,14 +3,15 @@ package main
 //go:generate go-bindata ./config
 
 import (
+	"flag"
 	"github.com/naoina/toml"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"sync"
-	""
 )
 
 type Config struct {
@@ -18,20 +19,41 @@ type Config struct {
 	Install  []string
 }
 
-func main() {
-	cpus := runtime.NumCPU()
-	log.Printf("cpus %v", cpus)
-	runtime.GOMAXPROCS(cpus)
+func init() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+}
 
+func main() {
 	gopath := os.Getenv("GOPATH")
 	if gopath == "" {
 		log.Fatalf("No GOPATH set.")
 	}
 
-	buf, _ := Asset("config/repos.toml")
+	flag.Parse()
+	args := flag.Args()
+
+	var buf []byte
+	var err error
+
+	if len(args) == 1 {
+		f, err := os.Open(args[0])
+		if err != nil {
+			log.Fatalf("%v", err)
+		}
+		defer f.Close()
+		buf, err = ioutil.ReadAll(f)
+		if err != nil {
+			log.Fatalf("%v", err)
+		}
+	} else {
+		buf, err = Asset("config/repos.toml")
+		if err != nil {
+			log.Fatalf("%v", err)
+		}
+	}
 
 	var repos Config
-	if err := toml.Unmarshal(buf, &repos); err != nil {
+	if err = toml.Unmarshal(buf, &repos); err != nil {
 		log.Fatalf("%v", err)
 	}
 
