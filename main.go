@@ -36,12 +36,7 @@ func main() {
 	var err error
 
 	if len(args) == 1 {
-		f, err := os.Open(args[0])
-		if err != nil {
-			log.Fatalf("%v", err)
-		}
-		defer f.Close()
-		buf, err = ioutil.ReadAll(f)
+		buf, err = ioutil.ReadFile(args[0])
 		if err != nil {
 			log.Fatalf("%v", err)
 		}
