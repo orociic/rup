@@ -24,23 +24,18 @@ func init() {
 }
 
 func main() {
-	gopath := os.Getenv("GOPATH")
-	if gopath == "" {
-		log.Fatalf("No GOPATH set.")
-	}
+	var buf []byte
 
 	flag.Parse()
-	args := flag.Args()
 
-	var buf []byte
-	var err error
-
-	if len(args) == 1 {
-		buf, err = ioutil.ReadFile(args[0])
+	if flag.NArg() == 1 {
+		var err error
+		buf, err = ioutil.ReadFile(flag.Arg(0))
 		if err != nil {
 			log.Fatalf("%v", err)
 		}
 	} else {
+		var err error
 		buf, err = Asset("config/repos.toml")
 		if err != nil {
 			log.Fatalf("%v", err)
@@ -48,13 +43,16 @@ func main() {
 	}
 
 	var repos Config
-	if err = toml.Unmarshal(buf, &repos); err != nil {
+	if err := toml.Unmarshal(buf, &repos); err != nil {
 		log.Fatalf("%v", err)
 	}
+	download(repos.Download)
+	install(repos.Install)
+}
 
-	// download
+func download(repos []string) {
 	var wg sync.WaitGroup
-	for _, repo := range repos.Download {
+	for _, repo := range repos {
 		repo := repo
 		wg.Add(1)
 		go func() {
@@ -65,9 +63,15 @@ func main() {
 		}()
 	}
 	wg.Wait()
+}
 
-	//install
-	for _, repo := range repos.Install {
+func install(repos []string) {
+	gopath := os.Getenv("GOPATH")
+	if gopath == "" {
+		log.Fatalf("No GOPATH set.")
+	}
+
+	for _, repo := range repos {
 		path := filepath.Join(gopath, "src", repo)
 		os.Chdir(path)
 		err := exec.Command("go", "install").Run()
