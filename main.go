@@ -24,30 +24,27 @@ func init() {
 }
 
 func main() {
-	var buf []byte
-
 	flag.Parse()
 
-	if flag.NArg() == 1 {
-		var err error
-		buf, err = ioutil.ReadFile(flag.Arg(0))
-		if err != nil {
-			log.Fatalf("%v", err)
-		}
-	} else {
-		var err error
-		buf, err = Asset("config/repos.toml")
-		if err != nil {
-			log.Fatalf("%v", err)
-		}
-	}
-
-	var repos Config
-	if err := toml.Unmarshal(buf, &repos); err != nil {
+	var conf Config
+	if err := toml.Unmarshal(reposData(), &conf); err != nil {
 		log.Fatalf("%v", err)
 	}
-	download(repos.Download)
-	install(repos.Install)
+	download(conf.Download)
+	install(conf.Install)
+}
+
+func reposData() (buf []byte) {
+	var err error
+	if flag.NArg() == 1 {
+		buf, err = ioutil.ReadFile(flag.Arg(0))
+	} else {
+		buf, err = Asset("config/repos.toml")
+	}
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+	return buf
 }
 
 func download(repos []string) {
