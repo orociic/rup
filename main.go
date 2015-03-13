@@ -14,7 +14,7 @@ import (
 	"sync"
 )
 
-type Config struct {
+type config struct {
 	Download []string
 	Install  []string
 }
@@ -26,7 +26,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	var conf Config
+	var conf config
 	if err := toml.Unmarshal(reposData(), &conf); err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -50,14 +50,13 @@ func reposData() (buf []byte) {
 func download(repos []string) {
 	var wg sync.WaitGroup
 	for _, repo := range repos {
-		repo := repo
 		wg.Add(1)
-		go func() {
+		go func(rp string) {
 			defer wg.Done()
-			log.Printf("Updating %s ...", repo)
-			err := exec.Command("go", "get", "-u", repo).Run()
-			log.Printf("Updated %s: %v", repo, err)
-		}()
+			log.Printf("Updating %s ...", rp)
+			err := exec.Command("go", "get", "-u", rp).Run()
+			log.Printf("Updated %s: %v", rp, err)
+		}(repo)
 	}
 	wg.Wait()
 }
@@ -70,7 +69,9 @@ func install(repos []string) {
 
 	for _, repo := range repos {
 		path := filepath.Join(gopath, "src", repo)
-		os.Chdir(path)
+		if err := os.Chdir(path); err != nil {
+			log.Fatalf("%v", err)
+		}
 		err := exec.Command("go", "install").Run()
 		log.Printf("Installed %s: %v", repo, err)
 	}
