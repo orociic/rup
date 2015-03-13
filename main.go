@@ -51,11 +51,11 @@ func download(repos []string) {
 	var wg sync.WaitGroup
 	for _, repo := range repos {
 		wg.Add(1)
-		go func(rp string) {
+		go func(url string) {
 			defer wg.Done()
-			log.Printf("Updating %s ...", rp)
-			err := exec.Command("go", "get", "-u", rp).Run()
-			log.Printf("Updated %s: %v", rp, err)
+			log.Printf("Updating %s ...", url)
+			err := exec.Command("go", "get", "-u", url).Run()
+			log.Printf("Updated %s: %v", url, err)
 		}(repo)
 	}
 	wg.Wait()
