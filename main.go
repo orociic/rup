@@ -4,23 +4,19 @@ package main
 
 import (
 	"flag"
-	"github.com/naoina/toml"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"sync"
+
+	"github.com/naoina/toml"
 )
 
 type config struct {
 	Download []string
 	Install  []string
-}
-
-func init() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
 }
 
 func main() {
@@ -66,7 +62,6 @@ func install(repos []string) {
 	if gopath == "" {
 		log.Fatalf("No GOPATH set.")
 	}
-
 	for _, repo := range repos {
 		path := filepath.Join(gopath, "src", repo)
 		if err := os.Chdir(path); err != nil {
